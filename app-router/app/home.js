@@ -24,8 +24,8 @@ export default function Home() {
           keyExtractor={(item) => item.id}
           
           renderSectionHeader={({ section }) => (
-            <Text style={styles.header}>
-              {formatDate(section.title)}
+            <Text style={[styles.header, section.isHoje && styles.hojeText]}>
+              {section.tituloFormatado}
             </Text>
           )}
 
@@ -65,10 +65,15 @@ const groupByDate = (rooms) => {
     grouped[room.data].push(room);
   });
 
-  return Object.keys(grouped).map((data) => ({
-    title: data,
-    data: grouped[data],
-  }));
+  return Object.keys(grouped).map((data) => {
+    const formatado = formatDate(data)
+    return {
+      titulo: data,
+      tituloFormatado: formatado,
+      isHoje: formatado === 'Hoje',
+      data: grouped[data],
+    }
+  });
 };
 
 const formatDate = (dataString) => {
@@ -115,5 +120,5 @@ const styles = StyleSheet.create({
   itemCard:  { padding: 16, marginHorizontal: 10, marginVertical: 5, backgroundColor: '#eee', borderRadius: 8 },
   pastCard:  { backgroundColor: '#ddd' },
   pastText:  { color: '#999' },
-  
+  hojeText:  { color: '#EA1463' },
 });
