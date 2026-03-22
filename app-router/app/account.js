@@ -19,7 +19,7 @@ export default function MinhaConta() {
         <View style={styles.avatarWrapper}>
           <Image
             source={
-              require('../assets/user_photo.png') // pode trocar pela sua imagem
+              require('../assets/user_photo.png') 
             }
             style={styles.avatar}
           />
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     height: 270,
     borderRadius: 135,
     borderWidth: 4,
-    borderColor: '#EA1463', // 🔥 borda rosa
+    borderColor: '#EA1463', 
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
