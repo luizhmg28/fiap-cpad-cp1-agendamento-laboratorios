@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text, SectionList } from 'react-native';
+import { View, StyleSheet, Text, FlatList } from 'react-native';
 export default function Home() {
   // Valores de teste
   const salasReservadas = [
@@ -18,34 +18,40 @@ export default function Home() {
 
       {/* AGENDADOS */}
       <Text style={styles.label}>Agendamentos</Text>
-      <View style={[styles.card, {marginBottom: 200}]}>
-        <SectionList
-          sections={sections}
-          keyExtractor={(item) => item.id}
-          
-          renderSectionHeader={({ section }) => (
-            <Text style={[styles.header, section.isHoje && styles.hojeText]}>
-              {section.tituloFormatado}
-            </Text>
-          )}
-
-          renderItem={({ item }) => {
-            const past = isPast(item.data, item.horario);
-
+      <View style={[ {marginBottom: 200}]}>
+        <FlatList
+          data={sections}
+          keyExtractor={(section) => section.id}
+          renderItem={({ item: section }) => {
             return (
-              <View style={[
-                styles.itemCard,
-                past && styles.pastCard
-              ]}>
-                <Text style={past && styles.pastText}>
-                  {item.unidade ? 'FIAP Paulista' : 'Lins de Vasconcelos'}
+              <View style={styles.card}>
+                <Text style={[
+                  styles.header,
+                  section.isHoje && styles.hojeText
+                ]}>
+                  {section.tituloFormatado}
                 </Text>
-                <Text style={past && styles.pastText}>
-                  {item.lab}
-                </Text>
-                <Text style={past && styles.pastText}>
-                  {item.horario}
-                </Text>
+
+                {section.data.map((item) => {
+                  const past = isPast(item.data, item.horario);
+
+                  return (
+                    <View key={item.id} style={[
+                      styles.itemCard,
+                      past && styles.pastCard
+                    ]}>
+                      <Text style={past && styles.pastText}>
+                        {item.unidade ? 'FIAP Paulista' : 'Lins de Vasconcelos'}
+                      </Text>
+                      <Text style={past && styles.pastText}>
+                        {item.lab}
+                      </Text>
+                      <Text style={past && styles.pastText}>
+                        {item.horario}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
             );
           }}
@@ -114,7 +120,7 @@ const styles = StyleSheet.create({
   container: { padding: 20, backgroundColor: '#F3F4F6' },
   header:    { fontSize: 24, fontWeight: 'bold', marginBottom: 15 },
   label:     { marginTop: 12, marginBottom: 6, fontSize: 13, fontWeight: '600', color: '#6B7280' },
-  card:      { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 13, marginBottom: 10, 
+  card:      { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 13, marginHorizontal: 10, marginVertical: 10, 
                shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 
              },
   itemCard:  { padding: 16, marginHorizontal: 10, marginVertical: 5, backgroundColor: '#eee', borderRadius: 8 },
