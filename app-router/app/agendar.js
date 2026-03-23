@@ -72,10 +72,10 @@ export default function Agendar() {
 
       const novoAgendamento = {
         id: `${chave}`, // string única
-        unidade,
-        lab,
-        data,
-        horario
+        unidade: unidade,
+        lab: lab,
+        data: data,
+        horario: horario
       };
 
       horariosOcupados.push(novoAgendamento);

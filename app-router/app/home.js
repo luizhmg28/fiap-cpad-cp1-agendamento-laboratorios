@@ -93,7 +93,7 @@ export default function Home() {
           </View>
         )}
 
-        renderItem={() => null} // 👈 não usamos, pois renderizamos tudo no header
+        renderItem={() => null}
         contentContainerStyle={{ paddingBottom: 200 }}
       />
     </View>
@@ -123,21 +123,25 @@ const groupByDate = (rooms) => {
   });
 };
 
+function toUTCDate(date) {
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
 const formatDate = (dataString) => {
-  const today = new Date();
-  const date = new Date(dataString);
+  const hoje = new Date();
+  const data = new Date(dataString);
 
-  const isToday = date.toDateString() === today.toDateString();
+  const isHoje = toUTCDate(data) === toUTCDate(hoje);
 
-  const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
+  const amanha = new Date();
+  amanha.setDate(hoje.getDate() + 1);
 
-  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+  const isAmanha = toUTCDate(data) === toUTCDate(amanha);
 
-  if (isToday) return 'Hoje';
-  if (isTomorrow) return 'Amanhã';
+  if (isHoje) return 'Hoje';
+  if (isAmanha) return 'Amanhã';
 
-  return date.toLocaleDateString('pt-BR');
+  return data.toLocaleDateString('pt-BR');
 };
 
 const isPast = (data, horario) => {
