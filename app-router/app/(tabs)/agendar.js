@@ -5,7 +5,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import { useRouter } from 'expo-router'
 import { Calendar } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
-import { setRefresh } from '../utils/refreshFlag';
+import { setRefresh } from '../../utils/refreshFlag';
 
 const horariosBase = [
   '07:00','08:00','09:00','10:00','11:00','12:00',

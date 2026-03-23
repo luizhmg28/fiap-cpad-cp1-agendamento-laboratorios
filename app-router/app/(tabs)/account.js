@@ -1,4 +1,5 @@
-import React from 'react';
+import { useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 import {
   View,
   Text,
@@ -10,6 +11,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 export default function MinhaConta() {
+  const { logout } = useContext(AuthContext);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
 
@@ -19,7 +22,7 @@ export default function MinhaConta() {
         <View style={styles.avatarWrapper}>
           <Image
             source={
-              require('../assets/user_photo.png') 
+              require('../../assets/user_photo.png') 
             }
             style={styles.avatar}
           />
@@ -43,7 +46,7 @@ export default function MinhaConta() {
           <Text style={styles.optionText}>Alterar senha</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.option}>
+        <TouchableOpacity style={styles.option} onPress={logout}>
           <Ionicons name="log-out-outline" size={25} color="#EA1463" />
           <Text style={[styles.optionText, { color: '#EA1463' }]}>
             Sair

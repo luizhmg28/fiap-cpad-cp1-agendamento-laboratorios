@@ -2,7 +2,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { View, StyleSheet, Text, SectionList } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { getRefresh, setRefresh } from '../utils/refreshFlag';
+import { getRefresh, setRefresh } from '../../utils/refreshFlag';
 
 // Caso não hajam agendamentos, eu fiz esse elemento estilo React Native só pra não ficar feio
 const EmptyListPlaceholder = () => (
@@ -12,15 +12,6 @@ const EmptyListPlaceholder = () => (
 )
 
 export default function Home() {
-  const salasReservadas = [
-    { id: 1, unidade: 0, lab: '502', data: '2026-03-22', horario: '09:00 - 10:00' },
-    { id: 2, unidade: 1, lab: 'MakerLab', data: '2026-03-22', horario: '14:00 - 15:00' },
-    { id: 3, unidade: 0, lab: '502', data: '2026-03-23', horario: '09:00 - 10:00' },
-    { id: 4, unidade: 1, lab: 'MakerLab', data: '2026-03-23', horario: '14:00 - 15:00' },
-    { id: 5, unidade: 0, lab: '502', data: '2026-03-24', horario: '09:00 - 10:00' },
-    { id: 6, unidade: 1, lab: 'MakerLab', data: '2026-03-24', horario: '14:00 - 15:00' }
-  ];
-
   const [agendamentos, setAgendamentos] = useState([]);
 
   const fetchAgendamentos = async () => {
@@ -34,6 +25,8 @@ export default function Home() {
       console.warn("Erro ao carregar dados:", e);
     }
   };
+
+  AsyncStorage.clear()
 
   useEffect(() => {
     fetchAgendamentos();
