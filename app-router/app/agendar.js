@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Alert, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNPickerSelect from 'react-native-picker-select';
+import { useRouter } from 'expo-router'
 import { Calendar } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
+import { setRefresh } from '../utils/refreshFlag';
 
-// ✅ BASE FIXA DE HORÁRIOS (FALTAVA ISSO)
 const horariosBase = [
   '07:00','08:00','09:00','10:00','11:00','12:00',
   '13:00','14:00','15:00','16:00','17:00','18:00',
@@ -17,37 +18,36 @@ export default function Agendar() {
   const [lab, setLab] = useState(null);
   const [data, setData] = useState(null);
   const [horario, setHorario] = useState(null);
-
+  const [id, setId] = useState(0);
   const [horariosDisponiveis, setHorariosDisponiveis] = useState(
     horariosBase.map(hora => ({ hora, ocupado: false }))
   );
 
-  // ✅ CARREGA HORÁRIOS SALVOS
+  const router = useRouter();
+  const carregarHorarios = async () => {
+    if (!data || !lab || !unidade) return;
+
+    const chave = `${data}-${lab}-${unidade}`;
+
+    try {
+      const dadosSalvos = await AsyncStorage.getItem(chave);
+      const ocupados = dadosSalvos ? JSON.parse(dadosSalvos) : [];
+
+      const novosHorarios = horariosBase.map((hora) => ({
+        hora,
+        ocupado: ocupados.includes(hora),
+      }));
+
+      setHorariosDisponiveis(novosHorarios);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
-    const carregarHorarios = async () => {
-      if (!data || !lab || !unidade) return;
-
-      const chave = `${data}-${lab}-${unidade}`;
-
-      try {
-        const dadosSalvos = await AsyncStorage.getItem(chave);
-        const ocupados = dadosSalvos ? JSON.parse(dadosSalvos) : [];
-
-        const novosHorarios = horariosBase.map((hora) => ({
-          hora,
-          ocupado: ocupados.includes(hora),
-        }));
-
-        setHorariosDisponiveis(novosHorarios);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
     carregarHorarios();
   }, [data, lab, unidade]);
 
-  // ✅ AGENDAR
   const handleAgendar = async () => {
     if (!unidade || !lab || !data || !horario) {
       Alert.alert("Atenção", "Preencha tudo");
@@ -59,7 +59,7 @@ export default function Agendar() {
       return;
     }
 
-    const chave = `${data}-${lab}-${unidade}`;
+    const chave = `${data}-${lab}-${unidade}-${horario}`;
 
     try {
       const dadosSalvos = await AsyncStorage.getItem(chave);
@@ -70,9 +70,24 @@ export default function Agendar() {
         return;
       }
 
-      horariosOcupados.push(horario);
+      const novoAgendamento = {
+        id: `${chave}`, // string única
+        unidade,
+        lab,
+        data,
+        horario
+      };
 
-      await AsyncStorage.setItem(chave, JSON.stringify(horariosOcupados));
+      horariosOcupados.push(novoAgendamento);
+
+      try {
+        await AsyncStorage.setItem(chave, JSON.stringify(horariosOcupados));
+
+      } catch(e) {
+        console.warn("Erro ao salvar!") // Como não há um back-end, vou apenas dar um warn no console
+        return;
+      }
+
 
       // Atualiza UI na hora
       setHorariosDisponiveis((prev) =>
@@ -86,13 +101,15 @@ export default function Agendar() {
         `Agendamento realizado!\n\nUnidade: ${unidade}\nLab: ${lab}\nData: ${data}\nHorário: ${horario}`
       );
 
+      setRefresh(true);
+      router.push('/home')
+
       setHorario(null);
     } catch (error) {
       console.log(error);
     }
   };
 
-  // ✅ BLOQUEAR HORÁRIOS PASSADOS
   const isHorarioPassado = (horaSelecionada) => {
     if (!data) return false;
 

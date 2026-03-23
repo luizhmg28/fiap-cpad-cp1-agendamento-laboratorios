@@ -1,62 +1,101 @@
-import { View, StyleSheet, Text, FlatList } from 'react-native';
-export default function Home() {
-  // Valores de teste
-  const salasReservadas = [
-    { 'id': 1, 'unidade': 0, 'lab': '502', 'data': '2026-03-22', 'horario': '09:00 - 10:00' },
-    { 'id': 2, 'unidade': 1, 'lab': 'MakerLab', 'data': '2026-03-22', 'horario': '14:00 - 15:00' },
-    { 'id': 3, 'unidade': 0, 'lab': '502', 'data': '2026-03-23', 'horario': '09:00 - 10:00' },
-    { 'id': 4, 'unidade': 1, 'lab': 'MakerLab', 'data': '2026-03-23', 'horario': '14:00 - 15:00' },
-    { 'id': 5, 'unidade': 0, 'lab': '502', 'data': '2026-03-24', 'horario': '09:00 - 10:00' },
-    { 'id': 6, 'unidade': 1, 'lab': 'MakerLab', 'data': '2026-03-24', 'horario': '14:00 - 15:00' }
-  ]
+import { useCallback, useState, useEffect } from 'react';
+import { View, StyleSheet, Text, SectionList } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import { getRefresh, setRefresh } from '../utils/refreshFlag';
 
-  const sections = groupByDate(salasReservadas);
+// Caso não hajam agendamentos, eu fiz esse elemento estilo React Native só pra não ficar feio
+const EmptyListPlaceholder = () => (
+  <View style={styles.card}>
+    <Text style={styles.pastText}>Nenhum agendamento feito.</Text>
+  </View>
+)
+
+export default function Home() {
+  const salasReservadas = [
+    { id: 1, unidade: 0, lab: '502', data: '2026-03-22', horario: '09:00 - 10:00' },
+    { id: 2, unidade: 1, lab: 'MakerLab', data: '2026-03-22', horario: '14:00 - 15:00' },
+    { id: 3, unidade: 0, lab: '502', data: '2026-03-23', horario: '09:00 - 10:00' },
+    { id: 4, unidade: 1, lab: 'MakerLab', data: '2026-03-23', horario: '14:00 - 15:00' },
+    { id: 5, unidade: 0, lab: '502', data: '2026-03-24', horario: '09:00 - 10:00' },
+    { id: 6, unidade: 1, lab: 'MakerLab', data: '2026-03-24', horario: '14:00 - 15:00' }
+  ];
+
+  const [agendamentos, setAgendamentos] = useState([]);
+
+  const fetchAgendamentos = async () => {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const dados = await AsyncStorage.multiGet(keys);
+
+      const parsed = dados.map(([_, value]) => JSON.parse(value)).flat();
+      setAgendamentos(parsed);
+    } catch (e) {
+      console.warn("Erro ao carregar dados:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchAgendamentos();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (getRefresh()) {
+        fetchAgendamentos();
+        setRefresh(false);
+      }
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>É bom te ver de novo!</Text>
 
-      {/* AGENDADOS */}
       <Text style={styles.label}>Agendamentos</Text>
-      <View style={[ {marginBottom: 200}]}>
-        <FlatList
-          data={sections}
-          keyExtractor={(section) => section.id}
-          renderItem={({ item: section }) => {
-            return (
-              <View style={styles.card}>
-                <Text style={[
-                  styles.header,
-                  section.isHoje && styles.hojeText
-                ]}>
-                  {section.tituloFormatado}
-                </Text>
+      <SectionList
+        sections={groupByDate(agendamentos)}
+        keyExtractor={(item) => item.id}
+        ListEmptyComponent={<EmptyListPlaceholder />}
 
-                {section.data.map((item) => {
-                  const past = isPast(item.data, item.horario);
+        renderSectionHeader={({ section }) => (
+          <View style={styles.card}>
+            <Text style={[
+              styles.header,
+              section.isHoje && styles.hojeText
+            ]}>
+              {section.title}
+            </Text>
 
-                  return (
-                    <View key={item.id} style={[
-                      styles.itemCard,
-                      past && styles.pastCard
-                    ]}>
-                      <Text style={past && styles.pastText}>
-                        {item.unidade ? 'FIAP Paulista' : 'Lins de Vasconcelos'}
-                      </Text>
-                      <Text style={past && styles.pastText}>
-                        {item.lab}
-                      </Text>
-                      <Text style={past && styles.pastText}>
-                        {item.horario}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            );
-          }}
-        />
-      </View>
+            {section.data.map((item) => {
+              const past = isPast(item.data, item.horario);
+
+              return (
+                <View
+                  key={item.id}
+                  style={[
+                    styles.itemCard,
+                    past && styles.pastCard
+                  ]}
+                >
+                  <Text style={past && styles.pastText}>
+                    {item.unidade}
+                  </Text>
+                  <Text style={past && styles.pastText}>
+                    {item.lab}
+                  </Text>
+                  <Text style={past && styles.pastText}>
+                    {item.horario}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        renderItem={() => null} // 👈 não usamos, pois renderizamos tudo no header
+        contentContainerStyle={{ paddingBottom: 200 }}
+      />
     </View>
   );
 }
@@ -71,14 +110,16 @@ const groupByDate = (rooms) => {
     grouped[room.data].push(room);
   });
 
-  return Object.keys(grouped).map((data) => {
-    const formatado = formatDate(data)
+  return Object.keys(grouped).sort().map((data) => {
+    const formatado = formatDate(data);
+
     return {
-      titulo: data,
-      tituloFormatado: formatado,
+      id: data,
+      title: formatado,
+      rawDate: data,
       isHoje: formatado === 'Hoje',
       data: grouped[data],
-    }
+    };
   });
 };
 
@@ -105,13 +146,9 @@ const isPast = (data, horario) => {
   const now = new Date();
   const [year, month, day] = data.split('-').map(Number);
 
-  const [startStr, endStr] = horario.split(' - '); // ["09:00", "10:00"]
+  const [hour, minute] = horario.split(':').map(Number); // Não considera passado até acabar o tempo de reserva
 
-  // Caso precise usar, basta remover do comentário (excluido do código para micro-otimização)
-  // const [startHour, startMinute] = startStr.split(':').map(Number);
-  const [endHour, endMinute] = endStr.split(':').map(Number); // Não considera passado até acabar o tempo de reserva
-
-  const end = new Date(year, month - 1, day, endHour, endMinute);
+  const end = new Date(year, month - 1, day, hour + 1, minute);
 
   return end < now;
 };
