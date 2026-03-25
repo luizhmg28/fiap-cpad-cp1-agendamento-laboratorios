@@ -1,8 +1,9 @@
 import { useCallback, useState, useEffect } from 'react';
-import { View, StyleSheet, Text, SectionList } from 'react-native';
+import { View, StyleSheet, Text, SectionList, Alert, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { getRefresh, setRefresh } from '../../utils/refreshFlag';
+import { Ionicons } from '@expo/vector-icons';
 
 // Caso não hajam agendamentos, eu fiz esse elemento estilo React Native só pra não ficar feio
 const EmptyListPlaceholder = () => (
@@ -48,6 +49,43 @@ export default function Home() {
     }
   };
 
+  const handleCancelar = (item) => {
+    Alert.alert(
+      "Cancelar agendamento",
+      `Deseja realmente cancelar o horário das ${item.horario} de ${formatDate(item.data).toLowerCase()}?`,
+      [
+        { text: "Não", style: "cancel" },
+        {
+          text: "Sim",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const chave = `${item.data}-${item.lab}-${item.unidade}`;
+
+              const dados = await AsyncStorage.getItem(chave);
+              if (!dados) return;
+
+              const agendamentos = JSON.parse(dados);
+              const novosAgendamentos = agendamentos.filter(ag => ag.id !== item.id);
+
+              if (novosAgendamentos.length > 0)
+                // Se existem outros agendamentos no dia, mantém a chave
+                await AsyncStorage.setItem(chave, JSON.stringify(novosAgendamentos));
+              else
+                // Senão, remove a chave por completo
+                await AsyncStorage.removeItem(chave);
+              
+              Alert.alert("Sucesso!", "Agendamento cancelado com sucesso");
+              fetchAgendamentos();
+            } catch (e) {
+              console.error("Erro ao cancelar:", e);
+            }
+          }
+        }
+      ]
+    )
+  }
+
   // AsyncStorage.clear()
 
   useEffect(() => {
@@ -86,13 +124,24 @@ export default function Home() {
           const past = isPast(item.data, item.horario);
           return (
             <View style={[styles.cardWrapper, { paddingVertical: 5, borderRadius: 0 }]}>
-              <View style={[styles.itemRow, past && styles.pastRow]}>
+              <TouchableOpacity 
+                // Só permite cancelar se não for um horário passado
+                onPress={() => !past && handleCancelar(item)}
+                activeOpacity={past ? 1 : 0.7}
+                style={[styles.itemRow, past && styles.pastRow]}
+              >
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.unidadeText, past && styles.pastText]}>{item.unidade}</Text>
                   <Text style={[styles.labText, past && styles.pastText]}>{item.lab}</Text>
                 </View>
-                <Text style={[styles.horaText, past && styles.pastText]}>{item.horario}</Text>
-              </View>
+                
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={[styles.horaText, past && styles.pastText]}>{item.horario}</Text>
+                  {!past && (
+                    <Ionicons name="close-circle-outline" size={16} color="#9CA3AF" style={{ marginTop: 4 }} />
+                  )}
+                </View>
+              </TouchableOpacity>
             </View>
           );
         }}

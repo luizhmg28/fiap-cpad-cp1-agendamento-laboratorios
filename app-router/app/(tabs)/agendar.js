@@ -79,14 +79,7 @@ export default function Agendar() {
 
       horariosOcupados.push(novoAgendamento);
 
-      try {
-        await AsyncStorage.setItem(chave, JSON.stringify(horariosOcupados));
-
-      } catch(e) {
-        console.warn("Erro ao salvar!"); // Como não há um back-end, vou apenas dar um warn no console
-        return;
-      }
-
+      await AsyncStorage.setItem(chave, JSON.stringify(horariosOcupados));
 
       // Atualiza UI na hora
       setHorariosDisponiveis((prev) =>
