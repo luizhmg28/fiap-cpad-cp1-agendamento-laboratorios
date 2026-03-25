@@ -70,7 +70,7 @@ export default function Agendar() {
       }
 
       const novoAgendamento = {
-        id: `${data}-${lab}-${horario}`, // string única
+        id: `${data}-${unidade}-${lab}-${horario}`, // string única
         unidade: unidade,
         lab: lab,
         data: data,
@@ -90,7 +90,7 @@ export default function Agendar() {
 
       Alert.alert(
         "Sucesso",
-        `Agendamento realizado!\n\nUnidade: ${unidade}\nLab: ${lab}\nData: ${data}\nHorário: ${horario}`
+        `Agendamento realizado!\n\nUnidade: ${unidade}\nLab: ${lab}\nData: ${new Date(data).toLocaleDateString('pt-BR')}\nHorário: ${horario}`
       );
 
       setRefresh(true);
