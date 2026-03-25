@@ -9,9 +9,11 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from "expo-router"
 
 export default function MinhaConta() {
   const { logout } = useContext(AuthContext);
+  const router =  useRouter();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -35,13 +37,8 @@ export default function MinhaConta() {
 
       {/* OPÇÕES */}
       <View style={styles.card}>
-        
-        <TouchableOpacity style={styles.option}>
-          <Ionicons name="create-outline" size={25} color="#6B7280" />
-          <Text style={styles.optionText}>Editar perfil</Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.option}>
+        <TouchableOpacity style={styles.option} onPress={() => router.push('/trocarSenha')}>
           <Ionicons name="lock-closed-outline" size={25} color="#6B7280" />
           <Text style={styles.optionText}>Alterar senha</Text>
         </TouchableOpacity>

@@ -14,7 +14,7 @@ export default function Login() {
         // nem de assegurar nada da senha. Eu só verifico se colocou algo e libero a entrada
         if (!email || !senha) return;
 
-        login({ email })
+        login({ email, senha })
     };
 
     return (
