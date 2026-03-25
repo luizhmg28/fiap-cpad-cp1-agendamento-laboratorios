@@ -18,7 +18,6 @@ export default function Agendar() {
   const [lab, setLab] = useState(null);
   const [data, setData] = useState(null);
   const [horario, setHorario] = useState(null);
-  const [id, setId] = useState(0);
   const [horariosDisponiveis, setHorariosDisponiveis] = useState(
     horariosBase.map(hora => ({ hora, ocupado: false }))
   );
@@ -35,7 +34,7 @@ export default function Agendar() {
 
       const novosHorarios = horariosBase.map((hora) => ({
         hora,
-        ocupado: ocupados.includes(hora),
+        ocupado: ocupados.some(ag => ag.horario === hora),
       }));
 
       setHorariosDisponiveis(novosHorarios);
@@ -59,19 +58,19 @@ export default function Agendar() {
       return;
     }
 
-    const chave = `${data}-${lab}-${unidade}-${horario}`;
+    const chave = `${data}-${lab}-${unidade}`;
 
     try {
       const dadosSalvos = await AsyncStorage.getItem(chave);
       let horariosOcupados = dadosSalvos ? JSON.parse(dadosSalvos) : [];
 
-      if (horariosOcupados.includes(horario)) {
+      if (horariosOcupados.some(ag => ag.horario === horario)) {
         Alert.alert("Erro", "Horário já ocupado!");
         return;
       }
 
       const novoAgendamento = {
-        id: `${chave}`, // string única
+        id: `${data}-${lab}-${horario}`, // string única
         unidade: unidade,
         lab: lab,
         data: data,
@@ -84,7 +83,7 @@ export default function Agendar() {
         await AsyncStorage.setItem(chave, JSON.stringify(horariosOcupados));
 
       } catch(e) {
-        console.warn("Erro ao salvar!") // Como não há um back-end, vou apenas dar um warn no console
+        console.warn("Erro ao salvar!"); // Como não há um back-end, vou apenas dar um warn no console
         return;
       }
 
@@ -102,7 +101,7 @@ export default function Agendar() {
       );
 
       setRefresh(true);
-      router.push('/home')
+      router.push('/home');
 
       setHorario(null);
     } catch (error) {
@@ -114,19 +113,19 @@ export default function Agendar() {
     if (!data) return false;
 
     const agora = new Date();
-    const dataSelecionada = new Date(data + "T00:00:00");
+    const dataSelecionada = agora.toLocaleDateString('en-CA'); // Sim, PRECISA ser do Canadá. Eles usam formato YYYY-MM-DD. Eu não sei como cheguei aqui, mas já faz 2 dias, então vai ficar desse jeito
 
-    if (dataSelecionada.toDateString() !== agora.toDateString()) {
-      return false;
-    }
+    // Data futura
+    if (data > dataSelecionada) return false;
 
-    const [hora, minuto] = horaSelecionada.split(':');
-    const horarioData = new Date();
-    horarioData.setHours(hora);
-    horarioData.setMinutes(minuto);
-    horarioData.setSeconds(0);
+    // Data antiga
+    if (data < dataSelecionada) return true;
+    
+    const [hora, minuto] = horaSelecionada.split(':').map(Number);
+    const minutosAgora = (agora.getHours() * 60) + agora.getMinutes();
+    const minutosSelecionados = (hora * 60) + minuto;
 
-    return horarioData <= agora;
+    return minutosSelecionados <= minutosAgora;
   };
 
   return (
@@ -165,7 +164,7 @@ export default function Agendar() {
       <Text style={styles.label}>Data</Text>
       <View style={styles.card}>
         <Calendar
-          minDate={new Date().toISOString().split('T')[0]}
+          minDate={new Date().toLocaleDateString('en-CA')} // Sim, PRECISA ser do Canadá. Não, eu não sei como cheguei aqui. Eles usam formato YYYY-MM-DD, então funciona, simples assim
           onDayPress={(day) => setData(day.dateString)}
           markedDates={{
             [data]: {
