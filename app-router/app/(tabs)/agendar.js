@@ -90,7 +90,7 @@ export default function Agendar() {
 
       Alert.alert(
         "Sucesso",
-        `Agendamento realizado!\n\nUnidade: ${unidade}\nLab: ${lab}\nData: ${new Date(data).toLocaleDateString('pt-BR')}\nHorário: ${horario}`
+        `Agendamento realizado!\n\nUnidade: ${unidade}\nLab: ${lab}\nData: ${data.split('-').reverse().join('/')}\nHorário: ${horario}`
       );
 
       setRefresh(true);
@@ -158,7 +158,7 @@ export default function Agendar() {
       <View style={styles.card}>
         <Calendar
           minDate={new Date().toLocaleDateString('en-CA')} // Sim, PRECISA ser do Canadá. Não, eu não sei como cheguei aqui. Eles usam formato YYYY-MM-DD, então funciona, simples assim
-          onDayPress={(day) => setData(day.dateString)}
+          onDayPress={(day) => {setData(day.dateString)}}
           markedDates={{
             [data]: {
               selected: true,
